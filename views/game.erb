@@ -1,36 +1,23 @@
-Dealer's cards:
-<ul>
-    <% session[:dealer_cards].each do |card| %>
-      <li>
-        <%= card.to_s %>
-      </li>
-    <% end %>
-</ul>
-<ul>
-
-<% session[:dealer_cards].each do |card| %>
-    <li>
-        <img src="/images/cards/<%= display_cards(card)%>" style="margin:0px 5px 5px 0px" />
-    </li>
-    <% end %>
-</ul>
-<!--<img src="/images/cards/clubs_2.jpg" style="margin:0px 5px 5px 0px" />-->
+<div class="well">
+  <h4>Dealer's cards:</h4>
+  <% session[:dealer_cards].each do |card| %>
+      <img src="/images/cards/<%= display_cards(card) %>" class='card_image' style="margin:0px 5px 5px 0px"/>
+  <% end %>
+</div>
 <br/>
-<%= session[:username] %>'s cards:
-<ul>
-    <% session[:player_cards].each do |card| %>
-        <li>
-          <%= card %>
-        </li>
-    <% end %>
-</ul>
-
-<h4><%= session[:username] %> has <%=calculate_total(session[:player_cards])%>. What would you like to do?</h4>
-<% if @show_hit_or_stay_buttons%>
-    <form id="hit" action="/game/player/hit" method="post">
-        <input type="submit" value="Hit" class="btn btn-success btn-large">
+<div class="well">
+  <h4><%= session[:username] %>'s cards:</h4>
+  <% session[:player_cards].each do |card| %>
+      <img src="/images/cards/<%= display_cards(card) %>" class='card_image' style="margin:0px 5px 5px 0px"/>
+  <% end %>
+</div>
+</br>
+<h4><%= session[:username] %> has <%= calculate_total(session[:player_cards]) %>. What would you like to do?</h4>
+<% if @show_hit_or_stay_buttons %>
+    <form id="hit_form" action="/game/player/hit" method="post">
+      <input type="submit" value="Hit" class="btn btn-success"/>
     </form>
-    <form id="stay" action="/game/player/stay" method="post">
-        <input type="submit" value="Stay" class="btn btn-warning btn-large">
+    <form id="stay_form" action="/game/player/stay" method="post">
+      <input type="submit" value="Stay" class="btn btn-warning"/>
     </form>
-<% end%>
+<% end %>

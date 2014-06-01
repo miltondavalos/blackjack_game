@@ -37,28 +37,28 @@ helpers do
   end
 
   def display_cards(cards)
-    suit = cards[0]
-    card = cards[1]
-    case suit
+    suit = case cards[0]
       when 'C'
-        suit = 'clubs'
+        'clubs'
       when 'D'
-        suit='diamonds'
+        'diamonds'
       when 'H'
-        suit='hearts'
+        'hearts'
       when 'S'
-        suit='spades'
+        'spades'
     end
 
-    case card
+    card = case cards[1]
       when 'K'
-        card = 'king'
+        'king'
       when 'Q'
-        card = 'queen'
+        'queen'
       when 'J'
-        card = 'jack'
+        'jack'
       when 'A'
-        card = 'ace'
+        'ace'
+      else
+         cards[1]
     end
     "#{suit}_#{card}.jpg"
   end
@@ -121,6 +121,11 @@ get '/new_game' do
 end
 
 post '/new_game' do
+  if params[:username].empty?
+    @error = "Name must be supplied."
+  end
+  halt(erb :new_game)
+
   session[:username] = params[:username]
   redirect '/game'
 end
@@ -130,7 +135,11 @@ post '/game/player/hit' do
   #session[:player_total] = calculate_total(session[:player_cards])
   #erb :game
   session[:player_cards] << session[:deck].pop
-  if calculate_total(session[:player_cards]) > 21
+  player_total = calculate_total(session[:player_cards])
+  if player_total == 21
+    @success = 'Congratulations you hit blackjack!'
+    @show_hit_or_stay_buttons = false
+  elsif player_total > 21
     @error = "You busted. Got #{calculate_total(session[:player_cards])}!"
     @show_hit_or_stay_buttons = false
   end
