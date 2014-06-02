@@ -66,6 +66,9 @@ end
 
 before do
   @show_hit_or_stay_buttons = true
+  @show_dealers_next_card_button = false
+  @hide_first_card = true
+  @play_again = false
 end
 #route that renders text in the browser
 get '/home' do
@@ -90,23 +93,18 @@ end
 get '/game' do
   session[:player_cards] = []
   session[:dealer_cards] = []
-  session[:dealer_cards_suit] = []
+  #session[:dealer_cards_suit] = []
   session[:deck] = new_deck
   session[:player_cards] << session[:deck].pop
   session[:dealer_cards] << session[:deck].pop
-  #session[:dealer_cards_suit] << display_cards(session[:dealer_cards])
   session[:player_cards] << session[:deck].pop
   session[:dealer_cards] << session[:deck].pop
-  session[:dealer_cards_suit] << display_cards(session[:dealer_cards])
+  #session[:dealer_cards_suit] << display_cards(session[:dealer_cards])
   session[:dealer_total] = calculate_total(session[:dealer_cards])
   session[:player_total] = calculate_total(session[:player_cards])
   erb :game
 end
 
-#get '/' do
-#  erb :new_game
-#  #redirect '/new_game'
-#end
 get '/' do
   if session[:username]
     redirect '/game'
@@ -123,58 +121,89 @@ end
 post '/new_game' do
   if params[:username].empty?
     @error = "Name must be supplied."
+    halt(erb :new_game)
+  else
+    if !params[:username].match(/^[a-zA-Z\-\s]*$/)
+      @error = "Please provide an alphabetic name."
+      halt(erb :new_game)
+    end
   end
-  halt(erb :new_game)
 
   session[:username] = params[:username]
   redirect '/game'
 end
 
 post '/game/player/hit' do
-  #session[:player_cards] << session[:deck].pop
-  #session[:player_total] = calculate_total(session[:player_cards])
-  #erb :game
   session[:player_cards] << session[:deck].pop
   player_total = calculate_total(session[:player_cards])
   if player_total == 21
     @success = 'Congratulations you hit blackjack!'
     @show_hit_or_stay_buttons = false
+    @play_again = true
   elsif player_total > 21
     @error = "You busted. Got #{calculate_total(session[:player_cards])}!"
     @show_hit_or_stay_buttons = false
+    @play_again = true
   end
   erb :game
 end
 
-#get '/game/player/stay' do
-#  session[:dealer_total] = calculate_total(session[:dealer_cards])
-#
-#  while session[:dealer_total] < 17
-#    session[:dealer_cards] << session[:deck].pop
-#    session[:dealer_total] = calculate_total(session[:dealer_cards])
-#    erb :game
-#  end
-#end
-
 post '/game/player/stay' do
   @success = "You have chosen to stay"
   @show_hit_or_stay_buttons = false
-  session[:dealer_total] = calculate_total(session[:dealer_cards])
+  @hide_first_card = false
+  dealer_total = calculate_total(session[:dealer_cards])
 
-  while session[:dealer_total] < 17
-    session[:dealer_cards] << session[:deck].pop
-    session[:dealer_total] = calculate_total(session[:dealer_cards])
-    #erb :game
+  if dealer_total >= 17
+    redirect '/game/dealer/stay'
+  else
+    @show_dealers_next_card_button = true
+    erb :game
   end
-  erb :game
 
-  #if session[:dealer_total] > 21
-  #  "Dealer busted #{session[:dealer_total]}."
-  #  erb :game
-  #else
-  #  "Dealer: #{session[:dealer_total]} vs. #{session[:username]}: #{session[:player_total]}"
-  #  erb :game
-  #end
+
+  #erb :game
+end
+
+post '/game/dealer/hit' do
+  @show_hit_or_stay_buttons = false
+  @hide_first_card = false
+  session[:dealer_cards] << session[:deck].pop
+
+  dealer_total = calculate_total(session[:dealer_cards])
+
+  if dealer_total >= 17
+    redirect '/game/dealer/stay'
+  else
+    @show_dealers_next_card_button = true
+    erb :game
+  end
+end
+
+get '/game/dealer/stay' do
+  @show_hit_or_stay_buttons = false
+  @hide_first_card = false
+
+  dealer_total = calculate_total(session[:dealer_cards])
+  player_total = calculate_total(session[:player_cards])
+
+  if player_total <= dealer_total && dealer_total < 21
+    @error = "You lose!. Dealer got #{dealer_total}! and you #{player_total}!"
+  elsif dealer_total == 21
+    @error = 'You lose!. Dealer hit Blackjack!'
+  elsif dealer_total == player_total
+    @info = "It is a tie!. Dealer got #{dealer_total}! and you #{player_total}!"
+  elsif dealer_total > 21
+    @info = "You win!. Dealer got #{dealer_total}! and you #{player_total}!"
+  end
+
+  @play_again = true
+
+  erb :game
+end
+
+get '/play_again' do
+  redirect '/game'
 end
 
 get '/game_over' do
