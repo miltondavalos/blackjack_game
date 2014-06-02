@@ -5,6 +5,9 @@ require "sinatra/reloader" if development?
 
 set :sessions, true
 
+BLACKJACK_AMOUNT = 21
+DEALER_STAY_AMOUNT = 17
+
 helpers do
   def new_deck
     suits = ['H', 'D', 'S', 'C']
@@ -93,13 +96,11 @@ end
 get '/game' do
   session[:player_cards] = []
   session[:dealer_cards] = []
-  #session[:dealer_cards_suit] = []
   session[:deck] = new_deck
   session[:player_cards] << session[:deck].pop
   session[:dealer_cards] << session[:deck].pop
   session[:player_cards] << session[:deck].pop
   session[:dealer_cards] << session[:deck].pop
-  #session[:dealer_cards_suit] << display_cards(session[:dealer_cards])
   session[:dealer_total] = calculate_total(session[:dealer_cards])
   session[:player_total] = calculate_total(session[:player_cards])
   erb :game
@@ -136,11 +137,11 @@ end
 post '/game/player/hit' do
   session[:player_cards] << session[:deck].pop
   player_total = calculate_total(session[:player_cards])
-  if player_total == 21
+  if player_total == BLACKJACK_AMOUNT
     @success = 'Congratulations you hit blackjack!'
     @show_hit_or_stay_buttons = false
     @play_again = true
-  elsif player_total > 21
+  elsif player_total > BLACKJACK_AMOUNT
     @error = "You busted. Got #{calculate_total(session[:player_cards])}!"
     @show_hit_or_stay_buttons = false
     @play_again = true
@@ -154,7 +155,7 @@ post '/game/player/stay' do
   @hide_first_card = false
   dealer_total = calculate_total(session[:dealer_cards])
 
-  if dealer_total >= 17
+  if dealer_total >= DEALER_STAY_AMOUNT
     redirect '/game/dealer/stay'
   else
     @show_dealers_next_card_button = true
@@ -172,7 +173,7 @@ post '/game/dealer/hit' do
 
   dealer_total = calculate_total(session[:dealer_cards])
 
-  if dealer_total >= 17
+  if dealer_total >= DEALER_STAY_AMOUNT
     redirect '/game/dealer/stay'
   else
     @show_dealers_next_card_button = true
@@ -187,13 +188,13 @@ get '/game/dealer/stay' do
   dealer_total = calculate_total(session[:dealer_cards])
   player_total = calculate_total(session[:player_cards])
 
-  if player_total <= dealer_total && dealer_total < 21
+  if player_total <= dealer_total && dealer_total < BLACKJACK_AMOUNT
     @error = "You lose!. Dealer got #{dealer_total}! and you #{player_total}!"
-  elsif dealer_total == 21
+  elsif dealer_total == BLACKJACK_AMOUNT
     @error = 'You lose!. Dealer hit Blackjack!'
   elsif dealer_total == player_total
     @info = "It is a tie!. Dealer got #{dealer_total}! and you #{player_total}!"
-  elsif dealer_total > 21
+  elsif dealer_total > BLACKJACK_AMOUNT
     @info = "You win!. Dealer got #{dealer_total}! and you #{player_total}!"
   end
 
