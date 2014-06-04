@@ -72,6 +72,7 @@ before do
   @show_dealers_next_card_button = false
   @hide_first_card = true
   @play_again = false
+  @show_message = true
 end
 #route that renders text in the browser
 get '/home' do
@@ -90,10 +91,17 @@ get '/groceries' do
 end
 
 get '/bet' do
+  #session[:bet] = params[:bet]
   erb :bet
 end
 
+post '/bet' do
+  session[:bet] = params[:bet]
+  redirect '/game'
+end
+
 get '/game' do
+  #session[:bet] = params[:bet]
   session[:player_cards] = []
   session[:dealer_cards] = []
   session[:deck] = new_deck
@@ -116,6 +124,7 @@ end
 
 get '/new_game' do
   erb :clear_sessions
+  session[:bet_left] = 500
   erb :new_game
 end
 
@@ -131,7 +140,8 @@ post '/new_game' do
   end
 
   session[:username] = params[:username]
-  redirect '/game'
+  #redirect '/game'
+  redirect '/bet'
 end
 
 post '/game/player/hit' do
@@ -139,11 +149,15 @@ post '/game/player/hit' do
   player_total = calculate_total(session[:player_cards])
   if player_total == BLACKJACK_AMOUNT
     @success = 'Congratulations you hit blackjack!'
+    session[:bet_left] = session[:bet_left].to_f + session[:bet].to_f
     @show_hit_or_stay_buttons = false
+    @show_message = false
     @play_again = true
   elsif player_total > BLACKJACK_AMOUNT
-    @error = "You busted. Got #{calculate_total(session[:player_cards])}!"
+    @error = "You busted. Got #{calculate_total(session[:player_cards])}!. Dealer #{session[:dealer_total]}"
+    session[:bet_left] = session[:bet_left].to_f - session[:bet].to_f
     @show_hit_or_stay_buttons = false
+    @show_message = false
     @play_again = true
   end
   erb :game
@@ -190,12 +204,19 @@ get '/game/dealer/stay' do
 
   if player_total <= dealer_total && dealer_total < BLACKJACK_AMOUNT
     @error = "You lose!. Dealer got #{dealer_total}! and you #{player_total}!"
+    session[:bet_left] = session[:bet_left].to_f - session[:bet].to_f
+    @show_message = false
   elsif dealer_total == BLACKJACK_AMOUNT
     @error = 'You lose!. Dealer hit Blackjack!'
+    session[:bet_left] = session[:bet_left].to_f - session[:bet].to_f
+    @show_message = false
   elsif dealer_total == player_total
     @info = "It is a tie!. Dealer got #{dealer_total}! and you #{player_total}!"
+    @show_message = false
   elsif dealer_total > BLACKJACK_AMOUNT
     @info = "You win!. Dealer got #{dealer_total}! and you #{player_total}!"
+    session[:bet_left] = session[:bet_left].to_f + session[:bet].to_f
+    @show_message = false
   end
 
   @play_again = true
@@ -204,11 +225,19 @@ get '/game/dealer/stay' do
 end
 
 get '/play_again' do
-  redirect '/game'
+  if session[:bet_left].to_f > 0
+    redirect '/bet'
+  else
+    erb :broke
+  end
 end
 
 get '/game_over' do
   erb :game_over
+end
+
+get '/broke' do
+  erb :broke
 end
 
 

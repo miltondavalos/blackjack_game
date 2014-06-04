@@ -1,3 +1,4 @@
+<h1 id='title'>Blackjack!</h1>
 <div class="well">
   <h4>Dealer's cards:</h4>
   <% session[:dealer_cards].each_with_index do |card, index| %>
@@ -27,7 +28,11 @@
   <% end %>
 </div>
 </br>
-<h4><%= session[:username] %> has <%= calculate_total(session[:player_cards]) %>. What would you like to do?</h4>
+<% if @show_message %>
+    <h4><%= session[:username] %> has <%= calculate_total(session[:player_cards]) %>. What would you like to do?</h4>
+    <h6><%= session[:username] %> has $<%= session[:bet_left] %> total. Bet amount this round:
+      $<%= session[:bet] %></h6>
+<% end %>
 <% if @show_hit_or_stay_buttons %>
     <form id="hit_form" action="/game/player/hit" method="post">
       <input type="submit" value="Hit" class="btn btn-success"/>

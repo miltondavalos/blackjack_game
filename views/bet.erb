@@ -1,6 +1,9 @@
 <h3>Make a bet for this round</h3>
-<%if session[:username]%>
-    <%= "#{session[:username]} has $500"%>
-    <%else%>
-    <!--<h4>trying to understand this thing</h4>-->
-<%end%>
+</br>
+<%= "#{session[:username]} has $#{session[:bet_left]}"%>
+</br>
+<form id='bet' action='/bet' method='post'>
+  <input type='text' name='bet'/>
+  </br>
+  <input type='submit' value='Make Bet' class='btn'/>
+</form>
