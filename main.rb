@@ -7,6 +7,7 @@ set :sessions, true
 
 BLACKJACK_AMOUNT = 21
 DEALER_STAY_AMOUNT = 17
+INITIAL_AMT = 500
 
 helpers do
   def new_deck
@@ -91,13 +92,21 @@ get '/groceries' do
 end
 
 get '/bet' do
-  #session[:bet] = params[:bet]
   erb :bet
 end
 
 post '/bet' do
-  session[:bet] = params[:bet]
-  redirect '/game'
+  bet = params[:bet]
+  if bet.to_i == 0 || bet.nil?
+    @error = "Please make a bet!"
+    halt(erb :bet)
+  elsif bet.to_f > session[:bet_left].to_f
+    @error = "Your bet of $#{bet} is more than you current balance $#{session[:bet_left]}."
+    halt(erb :bet)
+  else
+    session[:bet] = bet
+    redirect '/game'
+  end
 end
 
 get '/game' do
@@ -124,7 +133,7 @@ end
 
 get '/new_game' do
   erb :clear_sessions
-  session[:bet_left] = 500
+  session[:bet_left] = INITIAL_AMT
   erb :new_game
 end
 
