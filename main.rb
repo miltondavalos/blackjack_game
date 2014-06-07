@@ -157,23 +157,23 @@ post '/game/player/hit' do
   session[:player_cards] << session[:deck].pop
   player_total = calculate_total(session[:player_cards])
   if player_total == BLACKJACK_AMOUNT
-    @success = 'Congratulations you hit blackjack!'
+    @winner = 'Congratulations you hit blackjack!'
     session[:bet_left] = session[:bet_left].to_f + session[:bet].to_f
     @show_hit_or_stay_buttons = false
     @show_message = false
     @play_again = true
   elsif player_total > BLACKJACK_AMOUNT
-    @error = "You busted. Got #{calculate_total(session[:player_cards])}!. Dealer #{session[:dealer_total]}"
+    @loser = "You busted. Got #{calculate_total(session[:player_cards])}!. Dealer #{session[:dealer_total]}"
     session[:bet_left] = session[:bet_left].to_f - session[:bet].to_f
     @show_hit_or_stay_buttons = false
     @show_message = false
     @play_again = true
   end
-  erb :game
+  erb :game, layout: false
 end
 
 post '/game/player/stay' do
-  @success = "You have chosen to stay"
+  @winner = "You have chosen to stay"
   @show_hit_or_stay_buttons = false
   @hide_first_card = false
   dealer_total = calculate_total(session[:dealer_cards])
@@ -182,7 +182,7 @@ post '/game/player/stay' do
     redirect '/game/dealer/stay'
   else
     @show_dealers_next_card_button = true
-    erb :game
+    erb :game, layout: false
   end
 
 
@@ -200,7 +200,7 @@ post '/game/dealer/hit' do
     redirect '/game/dealer/stay'
   else
     @show_dealers_next_card_button = true
-    erb :game
+    erb :game, layout: false
   end
 end
 
@@ -212,11 +212,11 @@ get '/game/dealer/stay' do
   player_total = calculate_total(session[:player_cards])
 
   if player_total <= dealer_total && dealer_total < BLACKJACK_AMOUNT
-    @error = "You lose!. Dealer got #{dealer_total}! and you #{player_total}!"
+    @loser = "You lose!. Dealer got #{dealer_total}! and you #{player_total}!"
     session[:bet_left] = session[:bet_left].to_f - session[:bet].to_f
     @show_message = false
   elsif dealer_total == BLACKJACK_AMOUNT
-    @error = 'You lose!. Dealer hit Blackjack!'
+    @loser = 'You lose!. Dealer hit Blackjack!'
     session[:bet_left] = session[:bet_left].to_f - session[:bet].to_f
     @show_message = false
   elsif dealer_total == player_total
