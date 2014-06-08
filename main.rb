@@ -97,7 +97,7 @@ end
 
 post '/bet' do
   bet = params[:bet]
-  if bet.to_i == 0 || bet.nil?
+  if bet.to_i <= 0 || bet.nil?
     @error = "Please make a bet!"
     halt(erb :bet)
   elsif bet.to_f > session[:bet_left].to_f
